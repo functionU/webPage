@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>雪落无声 · 极境孤原 (Solitude in Snowfall)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Noto+Serif+SC:wght@300;400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --deep-night: #02050f;
+      --aurora-cyan: rgba(45, 212, 191, 0.16);
+      --aurora-purple: rgba(168, 85, 247, 0.14);
+      --ice-blue: #93c5fd;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    body {
+      background: var(--deep-night);
+      color: #cbd5e1;
+      font-family: 'Noto Serif SC', -apple-system, serif;
+      overflow: hidden;
+      width: 100vw;
+      height: 100vh;
+      position: relative;
+    }
+
+    /* 雪花与粒子 Canvas */
+    #snow-canvas {
+      position: fixed;
+      inset: 0;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    /* 极深幽怨极光背景 */
+    .sky-bg {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      background: radial-gradient(ellipse 95% 65% at 50% -10%, #0d1e3d 0%, #071022 45%, #02040a 100%);
+    }
+
+    .aurora-curtain {
+      position: absolute;
+      top: -20%;
+      left: -20%;
+      width: 140%;
+      height: 80%;
+      background: 
+        radial-gradient(circle at 30% 30%, var(--aurora-cyan) 0%, transparent 60%),
+        radial-gradient(circle at 70% 35%, var(--aurora-purple) 0%, transparent 55%),
+        radial-gradient(circle at 50% 60%, rgba(56, 189, 248, 0.1) 0%, transparent 50%);
+      filter: blur(80px);
+      animation: auroraShift 28s ease-in-out infinite alternate;
+      pointer-events: none;
+    }
+
+    @keyframes auroraShift {
+      0% { transform: translateY(0) rotate(-2deg) scale(1); opacity: 0.6; }
+      50% { transform: translateY(35px) rotate(2deg) scale(1.08); opacity: 0.9; }
+      100% { transform: translateY(-20px) rotate(-1deg) scale(1.02); opacity: 0.7; }
+    }
+
+    /* 苍白孤月 */
+    .cold-moon {
+      position: absolute;
+      top: 10%;
+      right: 15%;
+      width: 110px;
+      height: 110px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 35%, #ffffff 0%, #e2f1fc 50%, #9cbacf 100%);
+      box-shadow: 0 0 50px rgba(224, 242, 254, 0.4), 0 0 130px rgba(186, 230, 253, 0.25);
+      opacity: 0.9;
+      animation: moonPulse 8s ease-in-out infinite alternate;
+    }
+
+    @keyframes moonPulse {
+      from { transform: scale(1); box-shadow: 0 0 45px rgba(224, 242, 254, 0.35); }
+      to { transform: scale(1.03); box-shadow: 0 0 75px rgba(224, 242, 254, 0.6); }
+    }
+
+    /* 远景雪山与松针 */
+    .mountain-layer {
+      position: absolute;
+      bottom: 85px;
+      left: 0;
+      width: 100%;
+      height: 270px;
+      z-index: 1;
+      opacity: 0.35;
+      pointer-events: none;
+    }
+
+    .pines-layer {
+      position: absolute;
+      bottom: 85px;
+      left: 0;
+      width: 100%;
+      height: 210px;
+      z-index: 1;
+      opacity: 0.85;
+      pointer-events: none;
+    }
+
+    /* 积雪地面与冷雾 */
+    .snow-ground {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 110px;
+      background: linear-gradient(180deg, #1b263b 0%, #0e1726 45%, #050914 100%);
+      border-top: 1px solid rgba(224, 242, 254, 0.2);
+      box-shadow: 0 -20px 40px rgba(147, 197, 253, 0.08);
+      z-index: 2;
+    }
+
+    .night-mist {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 200%;
+      height: 320px;
+      background: linear-gradient(to top, rgba(15, 23, 42, 0.75) 0%, rgba(30, 41, 59, 0.25) 60%, transparent 100%);
+      filter: blur(35px);
+      animation: mistFlow 40s linear infinite alternate;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    @keyframes mistFlow {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-25%); }
+    }
+
+    /* 孤独的长椅与路灯（犹豫意境的核心构图） */
+    .solitary-scenery {
+      position: absolute;
+      bottom: 95px;
+      left: 18%;
+      z-index: 3;
+      pointer-events: none;
+    }
+
+    .lamp-pole {
+      width: 4px;
+      height: 310px;
+      background: linear-gradient(to right, #2d3748, #1a202c);
+      position: relative;
+    }
+
+    .lamp-arm {
+      position: absolute;
+      top: 0;
+      right: -28px;
+      width: 32px;
+      height: 4px;
+      background: #2d3748;
+    }
+
+    .lamp-shade {
+      position: absolute;
+      top: 4px;
+      right: -38px;
+      width: 26px;
+      height: 12px;
+      background: #4a5568;
+      border-radius: 4px 4px 0 0;
+    }
+
+    .lamp-beam {
+      position: absolute;
+      top: 14px;
+      right: -150px;
+      width: 250px;
+      height: 300px;
+      background: radial-gradient(ellipse at top, rgba(253, 224, 71, 0.3) 0%, rgba(253, 224, 71, 0.08) 55%, transparent 80%);
+      clip-path: polygon(45% 0%, 55% 0%, 100% 100%, 0% 100%);
+      filter: blur(6px);
+    }
+
+    /* 空无一人的积雪木长椅 */
+    .snowy-bench {
+      position: absolute;
+      bottom: 0;
+      right: -95px;
+      width: 80px;
+      height: 45px;
+    }
+
+    /* 犹豫风抒情诗意主文案 */
+    .hesitation-poetry {
+      position: absolute;
+      top: 22%;
+      left: 12%;
+      z-index: 4;
+      max-width: 520px;
+      pointer-events: none;
+    }
+
+    .poetry-tag {
+      font-family: 'Cinzel', serif;
+      font-size: 0.82rem;
+      letter-spacing: 6px;
+      color: rgba(148, 163, 184, 0.65);
+      margin-bottom: 20px;
+    }
+
+    .poetry-title {
+      font-size: clamp(2.2rem, 4.2vw, 3.4rem);
+      font-weight: 300;
+      letter-spacing: 8px;
+      line-height: 1.4;
+      color: #f8fafc;
+      text-shadow: 0 0 30px rgba(226, 232, 240, 0.4);
+      margin-bottom: 24px;
+    }
+
+    .poetry-body {
+      font-size: 1.08rem;
+      font-weight: 300;
+      line-height: 2.2;
+      color: #94a3b8;
+      letter-spacing: 2.5px;
+      margin-bottom: 24px;
+      font-style: italic;
+    }
+
+    .poetry-hint {
+      font-size: 0.82rem;
+      letter-spacing: 2.5px;
+      color: #64748b;
+    }
+
+    /* 极简流光指针 */
+    .glow-orb {
+      position: fixed;
+      width: 340px;
+      height: 340px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(147, 197, 253, 0.08) 0%, transparent 70%);
+      pointer-events: none;
+      transform: translate(-50%, -50%);
+      z-index: 2;
+    }
+
+    /* 静谧白噪触碰区域 */
+    .zen-audio {
+      position: fixed;
+      bottom: 24px;
+      right: 32px;
+      font-size: 0.78rem;
+      letter-spacing: 2px;
+      color: rgba(148, 163, 184, 0.45);
+      z-index: 10;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: color 0.3s;
+    }
+
+    .zen-audio:hover {
+      color: #e0f2fe;
+    }
+
+    .wave-bars {
+      display: inline-block;
+      width: 14px;
+      height: 10px;
+      position: relative;
+    }
+
+    .wave-bars span {
+      position: absolute;
+      bottom: 0;
+      width: 2px;
+      background: currentColor;
+      border-radius: 1px;
+    }
+    .wave-bars span:nth-child(1) { left: 0; height: 30%; }
+    .wave-bars span:nth-child(2) { left: 4px; height: 75%; }
+    .wave-bars span:nth-child(3) { left: 8px; height: 45%; }
+    .wave-bars span:nth-child(4) { left: 12px; height: 90%; }
+
+    .playing span {
+      animation: barJump 1.2s infinite ease-in-out alternate;
+    }
+    .playing span:nth-child(1) { animation-delay: 0.1s; }
+    .playing span:nth-child(2) { animation-delay: 0.3s; }
+    .playing span:nth-child(3) { animation-delay: 0.5s; }
+    .playing span:nth-child(4) { animation-delay: 0.2s; }
+
+    @keyframes barJump {
+      0% { height: 15%; }
+      100% { height: 100%; }
+    }
+
+    @media (max-width: 860px) {
+      .hesitation-poetry {
+        top: 14%;
+        left: 8%;
+        right: 8%;
+      }
+      .solitary-scenery {
+        left: 10%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 极光夜空 -->
+  <div class="sky-bg">
+    <div class="aurora-curtain"></div>
+    <div class="cold-moon"></div>
+  </div>
+
+  <!-- 远景群山与苍茫针叶林 -->
+  <svg class="mountain-layer" viewBox="0 0 1440 270" preserveAspectRatio="none">
+    <path d="M0,270 L0,150 Q160,50 340,130 Q520,210 700,90 Q880,-10 1080,110 Q1260,200 1440,80 L1440,270 Z" fill="#0d1829" />
+    <path d="M0,270 L0,190 Q240,100 500,160 Q760,230 1020,130 Q1220,60 1440,150 L1440,270 Z" fill="#132139" opacity="0.75"/>
+  </svg>
+
+  <svg class="pines-layer" viewBox="0 0 1440 210" preserveAspectRatio="none">
+    <g fill="#0b1320">
+      <polygon points="90,210 75,160 80,160 68,125 74,125 62,90 88,90 76,125 82,125 70,160 110,210" />
+      <polygon points="140,210 126,170 131,170 120,140 125,140 115,110 145,110 135,140 140,140 130,170 155,210" />
+      <polygon points="260,210 240,150 246,150 232,105 240,105 225,65 265,65 248,105 256,105 242,150 280,210" />
+      <polygon points="1120,210 1105,150 1110,150 1098,110 1128,110 1115,150 1138,210" />
+      <polygon points="1260,210 1242,140 1250,140 1234,90 1272,90 1256,140 1282,210" />
+      <polygon points="1350,210 1335,165 1340,165 1328,130 1352,130 1340,165 1365,210" />
+    </g>
+  </svg>
+
+  <!-- 孤独的路灯与积雪空长椅 -->
+  <div class="solitary-scenery">
+    <div class="lamp-arm"></div>
+    <div class="lamp-shade"></div>
+    <div class="lamp-pole"></div>
+    <div class="lamp-beam"></div>
+
+    <!-- 空长椅 SVG -->
+    <svg class="snowy-bench" viewBox="0 0 80 45">
+      <!-- 椅脚 -->
+      <line x1="8" y1="26" x2="6" y2="44" stroke="#1f2937" stroke-width="2.5" />
+      <line x1="72" y1="26" x2="74" y2="44" stroke="#1f2937" stroke-width="2.5" />
+      <!-- 靠背 -->
+      <line x1="12" y1="8" x2="10" y2="28" stroke="#1f2937" stroke-width="2" />
+      <line x1="68" y1="8" x2="70" y2="28" stroke="#1f2937" stroke-width="2" />
+      <path d="M 6,8 L 74,8" stroke="#374151" stroke-width="3" stroke-linecap="round" />
+      <path d="M 8,15 L 72,15" stroke="#374151" stroke-width="2.5" stroke-linecap="round" />
+      <!-- 椅面 -->
+      <path d="M 4,26 L 76,26" stroke="#4b5563" stroke-width="4" stroke-linecap="round" />
+      <!-- 椅面上与靠背上的厚厚落雪 -->
+      <path d="M 5,24 Q 40,22 75,24 Q 40,25 5,24 Z" fill="#ffffff" opacity="0.9" />
+      <path d="M 7,7 Q 40,5 73,7 Q 40,8 7,7 Z" fill="#ffffff" opacity="0.9" />
+    </svg>
+  </div>
+
+  <!-- 积雪地面与冷雾 -->
+  <div class="snow-ground"></div>
+  <div class="night-mist"></div>
+
+  <!-- 雪花与交互 Canvas -->
+  <canvas id="snow-canvas"></canvas>
+  <div class="glow-orb" id="glowOrb"></div>
+
+  <!-- 极致纯粹的犹豫与独白诗意文案 -->
+  <main class="hesitation-poetry">
+    <div class="poetry-tag">WINTER SOLITUDE // SILENT HOURS</div>
+    <h1 class="poetry-title">雪落无声 · 迟疑的夜</h1>
+    <p class="poetry-body">
+      “如果所有的落雪都是未寄出的叹息，<br>
+      今夜的荒原，大概堆积了整座冬天的迟疑。”
+    </p>
+    <div class="poetry-hint">— 轻触孤原夜空，看冰晶无声碎裂</div>
+  </main>
+
+  <!-- 静谧空灵夜雪声音触碰 -->
+  <div class="zen-audio" id="audioBtn">
+    <div class="wave-bars" id="waveBars">
+      <span></span><span></span><span></span><span></span>
+    </div>
+    <span id="audioStatusText">倾听静谧夜雪</span>
+  </div>
+
+  <script>
+    // --- Canvas 雪花物理模拟（大景深、迟缓、犹豫的落雪） ---
+    const canvas = document.getElementById('snow-canvas');
+    const ctx = canvas.getContext('2d');
+
+    let width = (canvas.width = window.innerWidth);
+    let height = (canvas.height = window.innerHeight);
+
+    window.addEventListener('resize', () => {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+    });
+
+    const mouse = { x: -1000, y: -1000, prevX: 0, prevY: 0, vx: 0, vy: 0 };
+    const glowOrb = document.getElementById('glowOrb');
+
+    window.addEventListener('mousemove', (e) => {
+      mouse.vx = (e.clientX - mouse.prevX) * 0.2;
+      mouse.vy = (e.clientY - mouse.prevY) * 0.2;
+      mouse.x = e.clientX;
+      mouse.y = e.clientY;
+      mouse.prevX = e.clientX;
+      mouse.prevY = e.clientY;
+
+      glowOrb.style.left = `${e.clientX}px`;
+      glowOrb.style.top = `${e.clientY}px`;
+    });
+
+    class HesitantFlake {
+      constructor(isBurst = false, bx = 0, by = 0) {
+        this.init(isBurst, bx, by);
+      }
+
+      init(isBurst = false, bx = 0, by = 0) {
+        this.z = Math.random() * 0.85 + 0.15;
+        this.radius = (Math.random() * 2.8 + 0.8) * this.z;
+        this.isTemporary = isBurst;
+
+        if (isBurst) {
+          this.x = bx;
+          this.y = by;
+          const angle = Math.random() * Math.PI * 2;
+          const speed = Math.random() * 5.5 + 1.5;
+          this.vx = Math.cos(angle) * speed;
+          this.vy = Math.sin(angle) * speed;
+          this.alpha = 1;
+          this.decay = Math.random() * 0.015 + 0.008;
+        } else {
+          this.x = Math.random() * (width + 80) - 40;
+          this.y = Math.random() * -height;
+          this.vx = 0;
+          this.vy = (Math.random() * 0.85 + 0.5) * this.z;
+          this.alpha = Math.random() * 0.65 + 0.25;
+        }
+
+        this.driftAngle = Math.random() * Math.PI * 2;
+        this.driftSpeed = Math.random() * 0.014 + 0.005;
+        this.isCrystal = Math.random() > 0.85;
+        this.rotation = Math.random() * Math.PI * 2;
+      }
+
+      update() {
+        if (this.isTemporary) {
+          this.x += this.vx;
+          this.y += this.vy;
+          this.vx *= 0.95;
+          this.vy *= 0.95;
+          this.vy += 0.03;
+          this.alpha -= this.decay;
+          return this.alpha > 0;
+        }
+
+        this.driftAngle += this.driftSpeed;
+        this.x += Math.sin(this.driftAngle) * (0.8 * this.z) + 0.15;
+        this.y += this.vy;
+        this.rotation += 0.01;
+
+        const dx = this.x - mouse.x;
+        const dy = this.y - mouse.y;
+        const dist = Math.hypot(dx, dy);
+        if (dist < 150) {
+          const force = (1 - dist / 150) * 2;
+          this.x += (dx / dist) * force + mouse.vx * 0.3;
+          this.y += (dy / dist) * force + mouse.vy * 0.3;
+        }
+
+        if (this.y > height + 20) {
+          this.y = -15;
+          this.x = Math.random() * (width + 80) - 40;
+        }
+        if (this.x > width + 40) this.x = -30;
+        if (this.x < -40) this.x = width + 30;
+
+        return true;
+      }
+
+      draw() {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.globalAlpha = Math.max(0, this.alpha);
+
+        if (this.isCrystal && this.radius > 2.2) {
+          ctx.rotate(this.rotation);
+          ctx.strokeStyle = '#e0f2fe';
+          ctx.lineWidth = 1;
+          ctx.shadowBlur = 10;
+          ctx.shadowColor = 'rgba(147, 197, 253, 0.7)';
+          ctx.beginPath();
+          for (let i = 0; i < 6; i++) {
+            ctx.rotate(Math.PI / 3);
+            ctx.moveTo(0, 0);
+            ctx.lineTo(0, this.radius * 2);
+            ctx.moveTo(0, this.radius * 1.2);
+            ctx.lineTo(this.radius * 0.5, this.radius * 1.6);
+          }
+          ctx.stroke();
+        } else {
+          const grad = ctx.createRadialGradient(0, 0, 0, 0, 0, this.radius);
+          grad.addColorStop(0, '#ffffff');
+          grad.addColorStop(0.5, 'rgba(216, 238, 255, 0.8)');
+          grad.addColorStop(1, 'rgba(147, 197, 253, 0)');
+          ctx.fillStyle = grad;
+
+          if (this.z > 0.7) {
+            ctx.shadowBlur = 12;
+            ctx.shadowColor = 'rgba(186, 230, 253, 0.85)';
+          }
+          ctx.beginPath();
+          ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.restore();
+      }
+    }
+
+    const flakes = [];
+    const COUNT = 320;
+    for (let i = 0; i < COUNT; i++) {
+      const f = new HesitantFlake();
+      f.y = Math.random() * height;
+      flakes.push(f);
+    }
+
+    window.addEventListener('click', (e) => {
+      for (let i = 0; i < 22; i++) {
+        flakes.push(new HesitantFlake(true, e.clientX, e.clientY));
+      }
+    });
+
+    function loop() {
+      ctx.clearRect(0, 0, width, height);
+      for (let i = flakes.length - 1; i >= 0; i--) {
+        const flake = flakes[i];
+        const alive = flake.update();
+        if (!alive && flake.isTemporary) {
+          flakes.splice(i, 1);
+        } else {
+          flake.draw();
+        }
+      }
+      requestAnimationFrame(loop);
+    }
+    requestAnimationFrame(loop);
+
+    // --- 纯算法静谧夜风合成器 (Web Audio API) ---
+    const audioBtn = document.getElementById('audioBtn');
+    const audioStatusText = document.getElementById('audioStatusText');
+    const waveBars = document.getElementById('waveBars');
+
+    let audioCtx = null;
+    let isPlaying = false;
+    let windNoise = null;
+    let mainGain = null;
+
+    audioBtn.addEventListener('click', () => {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+
+      if (isPlaying) {
+        mainGain.gain.setTargetAtTime(0, audioCtx.currentTime, 0.8);
+        setTimeout(() => {
+          if (windNoise) windNoise.stop();
+          windNoise = null;
+        }, 800);
+        audioStatusText.textContent = '倾听静谧夜雪';
+        waveBars.classList.remove('playing');
+        isPlaying = false;
+      } else {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+
+        const bufferSize = audioCtx.sampleRate * 2;
+        const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+        const data = noiseBuffer.getChannelData(0);
+        let b0 = 0, b1 = 0, b2 = 0;
+        for (let i = 0; i < bufferSize; i++) {
+          const white = Math.random() * 2 - 1;
+          b0 = 0.99886 * b0 + white * 0.0555179;
+          b1 = 0.99332 * b1 + white * 0.0750759;
+          b2 = 0.96900 * b2 + white * 0.1538520;
+          data[i] = (b0 + b1 + b2) * 0.05;
+        }
+
+        windNoise = audioCtx.createBufferSource();
+        windNoise.buffer = noiseBuffer;
+        windNoise.loop = true;
+
+        const filter = audioCtx.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.value = 210;
+
+        mainGain = audioCtx.createGain();
+        mainGain.gain.setValueAtTime(0.01, audioCtx.currentTime);
+        mainGain.gain.exponentialRampToValueAtTime(0.18, audioCtx.currentTime + 2);
+
+        windNoise.connect(filter);
+        filter.connect(mainGain);
+        mainGain.connect(audioCtx.destination);
+
+        windNoise.start();
+        audioStatusText.textContent = '风雪独白中…';
+        waveBars.classList.add('playing');
+        isPlaying = true;
+      }
+    });
+  </script>
+</body>
+</html>
